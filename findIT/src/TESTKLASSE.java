@@ -1,5 +1,0 @@
-/*NUR ZUM TESTEN*/
-
-class TESTKLASSE
-{  
-}

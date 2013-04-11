@@ -23,15 +23,10 @@ public class MiniRetrieve {
 
 	public static void main(String[] args) {
 		MiniRetrieve myMiniRetrieve = new MiniRetrieve();
-
 		if (args.length == 0) {
 			myMiniRetrieve.handleInput(documentDirectory, queryDirectory);
-			//myMiniRetrieve.createQueryHash(queryDirectory);
-			//myMiniRetrieve.createIndexes(documentDirectory);
 		} else if (args.length == 2) {
 			myMiniRetrieve.handleInput(args[1], args[0]);
-			//myMiniRetrieve.createQueryHash(args[1]);
-			//myMiniRetrieve.createIndexes(args[0]);
 		}
 		myMiniRetrieve.calculateIdfAndNorms();
 		myMiniRetrieve.processQueries();
@@ -47,7 +42,7 @@ public class MiniRetrieve {
 		if (documentDir.isDirectory() && documentDir.exists()) {
 			File[] files = documentDir.listFiles();
 			numberOfFiles = files.length;
-
+			
 			for (int i = 0; i < numberOfFiles; i++) {
 				String fileContent		= Utilities.readFile(files[i].getAbsolutePath());
 				String filename			= files[i].getName();
@@ -58,9 +53,10 @@ public class MiniRetrieve {
 
 				filteredTokens	= runStopwordfilter(originalTokens);
 				stemmedTokens	= runStemmer(filteredTokens);
+				
+				//stemmedTokens	= runStemmer(originalTokens);
 
 				createIndexes(stemmedTokens, filename);
-
 			}
 		} else {
 			System.out.println("DOCUMENT-Verzeichnis nicht gefunden. Bitte Verzeichnis korrekt angeben!");
@@ -80,6 +76,8 @@ public class MiniRetrieve {
 
 				filteredTokens	= runStopwordfilter(originalTokens);
 				stemmedTokens	= runStemmer(filteredTokens);
+				
+				//stemmedTokens	= runStemmer(originalTokens);
 
 				createQueryHash(stemmedTokens, queryId);
 
@@ -87,6 +85,7 @@ public class MiniRetrieve {
 		} else {
 			System.out.println("QUERY-Verzeichniss nicht gefunden. Bitte Verzeichniss korrekt angeben!");
 		}
+		
 	}
 
 
@@ -197,6 +196,7 @@ public class MiniRetrieve {
 			dNorm.put(filename, 0.0d);
 
 			Iterator itTerms = terms.entrySet().iterator(); //Iterator ueber alle Terme
+			
 			while (itTerms.hasNext()) {
 				Map.Entry queryTermMap = (Map.Entry) itTerms.next();
 				String currentTerm = queryTermMap.getKey().toString();
@@ -222,7 +222,7 @@ public class MiniRetrieve {
 	private void createQueryHash(String[] tokens, String queryId) {
 
 		for (int i = 0; i < tokens.length; i++) {
-			String currentToken = tokens[i].trim().toLowerCase();
+			String currentToken = tokens[i];
 			if (myQueryIndex.containsKey(queryId)) {
 				if (myQueryIndex.get(queryId).containsKey(currentToken)) {
 					int counter = myQueryIndex.getTermFrequencyInOneDocument(queryId, currentToken);
@@ -250,63 +250,36 @@ public class MiniRetrieve {
 	 * Usage: Stemmer file-name file-name ...
 	 */
 	private String[] runStemmer(String[] filteredTokens) {
+		Stemmer stemmer			= new Stemmer();
+		String[] tmpTokens		= new String[filteredTokens.length];
+		int index 				= 0;
+		boolean includesNumbers	= false;
 		String[] stemmedTokens;
+		String tmpToken;
+		char tmpChar[];
 		
-		char[] w = new char[501];
-		Stemmer stemmer = new Stemmer();
-		
-		for (int i = 0; i < args.length; i++)
-			try
-		{
-				FileInputStream in = new FileInputStream(args[i]); // JEDES FILE EINLESEN
-
-				try { 
-					while(true) {		// ARBEITET BIS 
-						int ch = in.read();
-						if (Character.isLetter((char) ch)) {
-							int j = 0;
-							while(true) {
-								ch = Character.toLowerCase((char) ch);
-								w[j] = (char) ch;
-								if (j < 500) j++;
-								ch = in.read();
-								if (!Character.isLetter((char) ch)) {
-									/* to test add(char ch) */
-									for (int c = 0; c < j; c++) {
-										stemmer.add(w[c]);
-									}
-
-									/* or, to test add(char[] w, int j) */
-									/* s.add(w, j); */
-
-									stemmer.stem();
-
-									{  String u;
-
-									/* and now, to test toString() : */
-									u = stemmer.toString();
-
-									/* to test getResultBuffer(), getResultLength() : */
-									/* u = new String(s.getResultBuffer(), 0, s.getResultLength()); */
-
-									System.out.print(u);
-									}
-									break;
-								}
-							}
-						}
-						if (ch < 0) break;
-						System.out.print((char)ch);
-					}
+		for(int i = 0; i < filteredTokens.length; i++) {
+			tmpToken	= filteredTokens[i];
+			tmpChar	= new char[tmpToken.length()];
+			for(int j = 0; j < tmpToken.length(); j++) {
+				tmpChar[j]	= tmpToken.charAt(j);
+				if(!Character.isLetter(tmpChar[j])) {
+					tmpTokens[index++]	= tmpToken;
+					includesNumbers	= true;
+					break;
 				}
-				catch (IOException e)
-				{  System.out.println("error reading " + args[i]);
-				break;
-				}
+			}
+			if(!includesNumbers && tmpToken.length() > 0) {
+				stemmer.add(tmpChar, tmpChar.length);
+				stemmer.stem();
+				tmpTokens[index++]	= stemmer.toString();
+				includesNumbers	= false;
+			}
 		}
-		catch (FileNotFoundException e)
-		{  System.out.println("file " + args[i] + " not found");
-		break;
+		
+		stemmedTokens = new String[index];
+		for(int k = 0; k < index; k++) {
+			stemmedTokens[k]	= tmpTokens[k];
 		}
 		
 		return stemmedTokens;

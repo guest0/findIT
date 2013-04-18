@@ -1,5 +1,6 @@
 import java.util.*;
 //(w) 2007 Thomas Arni, InIT, ZHW
+@SuppressWarnings("rawtypes")
 public class KeyComparator implements Comparator{
  
 	public int compare(Object o1, Object o2){

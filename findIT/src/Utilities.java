@@ -21,6 +21,7 @@ public class Utilities {
 			while ( ( line=inFile.readLine() ) != null){
 				returnString = returnString + " " + line;
 			}
+			inFile.close();
 		}
 		catch (IOException e){
 			System.err.println("Fehler beim Einlesen der Datei: " + e.toString());
@@ -29,7 +30,9 @@ public class Utilities {
 	}
 	
 	//Sortiert den uebergebenen HashMap und gibt diesen im Trec-Format aus , Zeile 128-135
+    @SuppressWarnings("rawtypes")
 	public static void writeTrecResultOutput(String queryId, HashMap accuHash, int numberOfResults){
+		@SuppressWarnings("unchecked")
 		List<Map.Entry<String, Double>> list = new ArrayList<Map.Entry<String, Double>>(accuHash.entrySet());
   		Collections.sort(list, new Comparator<Map.Entry<String, Double>>() {
 			public int compare(Map.Entry<String, Double> left,

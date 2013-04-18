@@ -8,19 +8,24 @@ import java.util.regex.Pattern;
 //(w) 2007 Thomas Arni, InIT, ZHW
 public class MiniRetrieve {
 
-	private static String queryDirectory = "queries";	//Verzeichnis mit allen Anfragen
-	private static String documentDirectory = "documents"; //Verzeichnis mit allen Dokuementen
-	private static double qNorm = 0;
-	private static final int numberOfResults = 10;
-	private static int numberOfFiles = 0;
-	private static InvertedIndex myInvertedIndex = new InvertedIndex();
-	private static NonInvertedIndex myNonInvertedIndex = new NonInvertedIndex();
-	private static QueryIndex myQueryIndex = new QueryIndex();
-	private static HashMap<String, Double> accuHash = null;
-	private static HashMap<String, Double> dNorm = new HashMap<String, Double>();
-	private static HashMap<String, Double> idf = new HashMap<String, Double>();
+	private static String queryDirectory		= "queries";				//Verzeichnis mit allen Anfragen
+	private static String documentDirectory		= "documents";	 			//Verzeichnis mit allen Dokuementen
+	private static double qNorm					= 0;
+	private static final int numberOfResults	= 10;
+	private static int numberOfFiles			= 0;
+	
+	private static InvertedIndex myInvertedIndex		= new InvertedIndex();
+	private static NonInvertedIndex myNonInvertedIndex	= new NonInvertedIndex();
+	private static QueryIndex myQueryIndex				= new QueryIndex();
+	
+	private static HashMap<String, Double> accuHash	= null;
+	private static HashMap<String, Double> dNorm	= new HashMap<String, Double>();
+	private static HashMap<String, Double> idf		= new HashMap<String, Double>();
+	
+	@SuppressWarnings("unchecked")
 	private static TreeMap<Integer, HashMap<String, Double>> myResultTreeMap = new TreeMap<Integer, HashMap<String, Double>>(new KeyComparator());
-
+	
+	
 	public static void main(String[] args) {
 		MiniRetrieve myMiniRetrieve = new MiniRetrieve();
 		if (args.length == 0) {
@@ -85,6 +90,7 @@ public class MiniRetrieve {
 	}
 
 	//Verarbeite Anfragen
+	@SuppressWarnings("rawtypes")
 	private void processQueries() {
 		Iterator itQueryIds = myQueryIndex.entrySet().iterator(); //Iterator ueber alle Anfragen
 		while (itQueryIds.hasNext()) {
@@ -166,6 +172,7 @@ public class MiniRetrieve {
 	}
 
 	// Normalisiert Laenge der Vektoren
+	@SuppressWarnings("rawtypes")
 	private void normalizeVectors(NonInvertedIndex myNonInvertedIndex) {
 		Iterator itAccu = accuHash.entrySet().iterator();
 		while (itAccu.hasNext()) {
@@ -182,6 +189,7 @@ public class MiniRetrieve {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	private void calculateIdfAndNorms() {
 		Iterator itFileNames = myNonInvertedIndex.entrySet().iterator(); //Iteartor ueber alle Dokumente
 		while (itFileNames.hasNext()) {
@@ -234,17 +242,12 @@ public class MiniRetrieve {
 		}
 	}
 
-	//Stopwords
+	//initializes the Stopwordfilter
 	private String[] runStopwordfilter(String[] originalTokens) {
 		return Stopwordfilter.filterStopwords(originalTokens);
 	}
 
-	/**
-	 * Initialises the Stemmer. It reads text from a a list of files, stems each
-	 * word, and writes the result to standard output. Note that the word
-	 * stemmed is expected to be in lower case: forcing lower case must be done
-	 * outside the Stemmer class. Usage: Stemmer file-name file-name ...
-	 */
+	//initializes the Stemmer
 	private String[] runStemmer(String[] filteredTokens) {
 		Stemmer stemmer = new Stemmer();
 		String[] tmpTokens = new String[filteredTokens.length];
@@ -332,6 +335,7 @@ public class MiniRetrieve {
 	}
 
 	//Printouts
+	@SuppressWarnings("rawtypes")
 	private void printResults() {
 		Iterator itaccu = myResultTreeMap.entrySet().iterator();
 		while (itaccu.hasNext()) {

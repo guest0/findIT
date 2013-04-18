@@ -1,5 +1,6 @@
 import java.util.HashMap;
 //(w) 2007 Thomas Arni, InIT, ZHW
+@SuppressWarnings("serial")
 public class QueryIndex extends Index{ //<queryId, <Token,Frequency>>
 
 	//Methode liefert fuer einen uebergebenen Term <term> die Haeufigkeit in der entsprechenden Anfrag <filename>.

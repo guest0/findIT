@@ -1,5 +1,6 @@
 import java.util.HashMap;
 //(w) 2007 Thomas Arni, InIT, ZHW
+@SuppressWarnings("serial")
 public class NonInvertedIndex extends Index{ //noninvindex filename->word->freq
    
     //Methode liefert fuer einen uebergebenen Term <term> die Haeufigkeit im entsprechenden Dokument <filename>.

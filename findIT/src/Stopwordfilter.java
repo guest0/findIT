@@ -6,7 +6,8 @@ import java.util.regex.Pattern;
 
 public class Stopwordfilter
 {  
-	private static String stopwordDirectory = "stopwords";
+	//private static String stopwordDirectory = "stopwords";
+	private static String stopwordDirectory = "data/stopwords";
 
 	public static String[] filterStopwords(String[] originalTokens) {
 	    List<String> filteredTokens	= new LinkedList<String>();

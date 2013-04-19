@@ -80,13 +80,6 @@ public class SimilarityThesaurusEnhanced{
 				}
 			}
 		}
-		Iterator test		= sim.entrySet().iterator();
-
-		while(test.hasNext()) {
-			Map.Entry test1	= (Map.Entry) test.next();
-			String t1		= test1.getKey().toString();
-			System.out.println("T1: " + t1);
-		}
 	}
 
 	//calculates the normalization of term-term similarities

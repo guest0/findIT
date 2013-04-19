@@ -8,9 +8,9 @@ public class SimilarityThesaurusEnhanced{
 	private InvertedIndex myInvertedIndex;
 	private NonInvertedIndex myNonInvertedIndex;
 
-	private HashMap<String, Double> coeff;
-	private HashMap<String, HashMap<String, Double>> sim;
-	private HashMap<String, HashMap<String, Double>> similarityThesaurus;
+	private HashMap<String, Double> coeff									= new HashMap<String, Double>();
+	private HashMap<String, HashMap<String, Double>> sim					= new HashMap<String, HashMap<String, Double>>();
+	private HashMap<String, HashMap<String, Double>> similarityThesaurus	= new HashMap<String, HashMap<String, Double>>();
 
 	public SimilarityThesaurusEnhanced(InvertedIndex myInvertedIndex, NonInvertedIndex myNonInvertedIndex) {
 		this.myInvertedIndex	= myInvertedIndex;
@@ -42,7 +42,7 @@ public class SimilarityThesaurusEnhanced{
 			while(itTerms1.hasNext()) {
 				Map.Entry documentTermMap1	= (Map.Entry) itTerms1.next();
 				String currentTerm1			= documentTermMap1.getKey().toString();
-				Iterator itTerms2			= itTerms1;
+				Iterator itTerms2			= documentTerms.entrySet().iterator();
 
 				termWeight1		= calcTermWeight(currentDocument, currentTerm1);
 				termWeightSqr	= Math.pow(termWeight1, 2);
@@ -52,9 +52,18 @@ public class SimilarityThesaurusEnhanced{
 				} else {
 					coeff.put(currentTerm1, coeff.get(currentTerm1) + termWeightSqr);
 				}
+				
+				Map.Entry documentTermMap2	= (Map.Entry) itTerms2.next();
+				while(!documentTermMap2.equals(documentTermMap1)) {
+					documentTermMap2	= (Map.Entry) itTerms2.next();
+				}
+				boolean firstTime	= true;
 
 				while(itTerms2.hasNext()) {
-					Map.Entry documentTermMap2			= (Map.Entry) itTerms1.next();
+					if(!firstTime) {
+						documentTermMap2	= (Map.Entry) itTerms2.next();
+					} firstTime	= false;
+					
 					String currentTerm2					= documentTermMap2.getKey().toString();
 					HashMap<String, Double> simTerm2	= sim.get(currentTerm1);
 					termWeight2							= calcTermWeight(currentDocument, currentTerm2);
@@ -64,6 +73,7 @@ public class SimilarityThesaurusEnhanced{
 					} else {
 						termWeightTot	= simTerm2.get(currentTerm2) + termWeight1 * termWeight2;
 					}
+					System.out.println("Step1: Doc: " + currentDocument + " T1: " + currentTerm1 + " T2: " + currentTerm2);
 					put(currentTerm1, currentTerm2, termWeightTot, sim);
 				}
 			}
@@ -87,7 +97,9 @@ public class SimilarityThesaurusEnhanced{
 			documentFrequency1			= termDocuments1.size();
 
 			if(documentFrequency1 >= 2 || documentFrequency1 <= nrOfDocuments/10) {
-				Iterator itTerms2		= itTerms1;
+				Iterator itTerms2		= myInvertedIndex.entrySet().iterator();
+				
+				while(!itTerms2.next().equals(termDocumentMap1)) {}
 
 				while(itTerms2.hasNext()) {
 					Map.Entry termDocumentMap2	= (Map.Entry) itTerms2.next();
@@ -98,6 +110,7 @@ public class SimilarityThesaurusEnhanced{
 
 					if(documentFrequency2 >= 2 || documentFrequency2 <= nrOfDocuments/10) {
 						HashMap<String, Double> simTerm2	= sim.get(currentTerm1);
+						System.out.println("Step2: T1: " + currentTerm1 + " T2: " + currentTerm2);
 						if(simTerm2.get(currentTerm2) > 0) {
 							HashMap<String, Double> similarityTerm2	= similarityThesaurus.get(currentTerm1);
 

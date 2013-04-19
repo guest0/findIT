@@ -22,17 +22,22 @@ public class MiniRetrieve {
 	private static HashMap<String, Double> dNorm	= new HashMap<String, Double>();
 	private static HashMap<String, Double> idf		= new HashMap<String, Double>();
 	
+	private static HashMap<String, HashMap<String, Double>> similarityThesaurus;
+	
 	@SuppressWarnings("unchecked")
 	private static TreeMap<Integer, HashMap<String, Double>> myResultTreeMap = new TreeMap<Integer, HashMap<String, Double>>(new KeyComparator());
 	
 	
 	public static void main(String[] args) {
-		MiniRetrieve myMiniRetrieve = new MiniRetrieve();
+		MiniRetrieve myMiniRetrieve 			= new MiniRetrieve();
+		SimilarityThesaurusEnhanced myThesaurus	= new SimilarityThesaurusEnhanced(myInvertedIndex, myNonInvertedIndex);
+		
 		if (args.length == 0) {
 			myMiniRetrieve.handleInput(documentDirectory, queryDirectory);
 		} else if (args.length == 2) {
 			myMiniRetrieve.handleInput(args[1], args[0]);
 		}
+		myThesaurus.computeSimilarityThesaurus();
 		myMiniRetrieve.calculateIdfAndNorms();
 		myMiniRetrieve.processQueries();
 		myMiniRetrieve.printInvertedIndexKey();
@@ -49,15 +54,15 @@ public class MiniRetrieve {
 			numberOfFiles = files.length;
 
 			for (int i = 0; i < numberOfFiles; i++) {
-				String fileContent = Utilities.readFile(files[i].getAbsolutePath());
-				String filename = files[i].getName();
-				Pattern p = Pattern.compile("[\\W]+");
+				String fileContent	= Utilities.readFile(files[i].getAbsolutePath());
+				String filename		= files[i].getName();
+				Pattern p			= Pattern.compile("[\\W]+");
 				String[] originalTokens = p.split(fileContent);
 				String[] filteredTokens;
 				String[] stemmedTokens;
 
-				filteredTokens = runStopwordfilter(originalTokens);
-				stemmedTokens = runStemmer(filteredTokens);
+				filteredTokens	= runStopwordfilter(originalTokens);
+				stemmedTokens	= runStemmer(filteredTokens);
 
 				createIndexes(stemmedTokens, filename);
 			}
@@ -70,15 +75,15 @@ public class MiniRetrieve {
 			File[] files = queryDir.listFiles();
 
 			for (int i = 0; i < files.length; i++) {
-				String fileContent = Utilities.readFile(files[i].getAbsolutePath());
-				String queryId = files[i].getName();
-				Pattern p = Pattern.compile("[\\W]+");
+				String fileContent	= Utilities.readFile(files[i].getAbsolutePath());
+				String queryId		= files[i].getName();
+				Pattern p			= Pattern.compile("[\\W]+");
 				String[] originalTokens = p.split(fileContent);
 				String[] filteredTokens;
 				String[] stemmedTokens;
 
-				filteredTokens = runStopwordfilter(originalTokens);
-				stemmedTokens = runStemmer(filteredTokens);
+				filteredTokens	= runStopwordfilter(originalTokens);
+				stemmedTokens	= runStemmer(filteredTokens);
 
 				createQueryHash(stemmedTokens, queryId);
 

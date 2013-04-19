@@ -9,7 +9,7 @@ public class SimilarityThesaurusBasic {
 	private NonInvertedIndex myNonInvertedIndex;
 
 	private HashMap<String, HashMap<String, Double>> matrixB;
-	private HashMap<String, HashMap<String, Double>> matrixBT;
+	//private HashMap<String, HashMap<String, Double>> matrixBT;
 	
 	//row: term i, column: term j	0 < i,j < matrixS.size()
 	private HashMap<String, HashMap<String, Double>> matrixS;
@@ -20,7 +20,7 @@ public class SimilarityThesaurusBasic {
 	}
 	
 	public HashMap<String, HashMap<String, Double>> calcSimilarityThesaurus() {
-		
+		calcFeatureWeight();
 		
 		return matrixS;
 	}

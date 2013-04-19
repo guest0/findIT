@@ -1,6 +1,7 @@
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 
 public class SimilarityThesaurusEnhanced{
@@ -58,11 +59,13 @@ public class SimilarityThesaurusEnhanced{
 					documentTermMap2	= (Map.Entry) itTerms2.next();
 				}
 				boolean firstTime	= true;
+				boolean lastEntryIt1	= !itTerms1.hasNext();
 
-				while(itTerms2.hasNext()) {
+				while(itTerms2.hasNext() || lastEntryIt1) {
 					if(!firstTime) {
 						documentTermMap2	= (Map.Entry) itTerms2.next();
-					} firstTime	= false;
+					} firstTime		= false;
+					lastEntryIt1	= false;
 					
 					String currentTerm2					= documentTermMap2.getKey().toString();
 					HashMap<String, Double> simTerm2	= sim.get(currentTerm1);
@@ -73,10 +76,16 @@ public class SimilarityThesaurusEnhanced{
 					} else {
 						termWeightTot	= simTerm2.get(currentTerm2) + termWeight1 * termWeight2;
 					}
-					System.out.println("Step1: Doc: " + currentDocument + " T1: " + currentTerm1 + " T2: " + currentTerm2);
 					put(currentTerm1, currentTerm2, termWeightTot, sim);
 				}
 			}
+		}
+		Iterator test		= sim.entrySet().iterator();
+
+		while(test.hasNext()) {
+			Map.Entry test1	= (Map.Entry) test.next();
+			String t1		= test1.getKey().toString();
+			System.out.println("T1: " + t1);
 		}
 	}
 
@@ -99,10 +108,19 @@ public class SimilarityThesaurusEnhanced{
 			if(documentFrequency1 >= 2 || documentFrequency1 <= nrOfDocuments/10) {
 				Iterator itTerms2		= myInvertedIndex.entrySet().iterator();
 				
-				while(!itTerms2.next().equals(termDocumentMap1)) {}
+				Map.Entry termDocumentMap2	= (Map.Entry) itTerms2.next();
+				while(!termDocumentMap2.equals(termDocumentMap1)) {
+					termDocumentMap2	= (Map.Entry) itTerms2.next();
+				}
+				boolean firstTime		= true;
+				boolean lastEntryIt1	= !itTerms1.hasNext();
 
-				while(itTerms2.hasNext()) {
-					Map.Entry termDocumentMap2	= (Map.Entry) itTerms2.next();
+				while(itTerms2.hasNext() || lastEntryIt1) {
+					if(!firstTime) {
+						termDocumentMap2	= (Map.Entry) itTerms2.next();
+					} firstTime		= false;
+					lastEntryIt1	= false;
+					
 					String currentTerm2			= termDocumentMap2.getKey().toString();
 
 					HashMap termDocuments2		= (HashMap) termDocumentMap2.getValue();
@@ -110,8 +128,7 @@ public class SimilarityThesaurusEnhanced{
 
 					if(documentFrequency2 >= 2 || documentFrequency2 <= nrOfDocuments/10) {
 						HashMap<String, Double> simTerm2	= sim.get(currentTerm1);
-						System.out.println("Step2: T1: " + currentTerm1 + " T2: " + currentTerm2);
-						if(simTerm2.get(currentTerm2) > 0) {
+						if(!(simTerm2.get(currentTerm2) == null) && simTerm2.get(currentTerm2) > 0) {
 							HashMap<String, Double> similarityTerm2	= similarityThesaurus.get(currentTerm1);
 
 							denominator	= simTerm2.get(currentTerm2);

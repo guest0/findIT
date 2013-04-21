@@ -40,7 +40,7 @@ public class MiniRetrieve {
 		myThesaurus.computeSimilarityThesaurus();
 		myMiniRetrieve.calculateIdfAndNorms();
 		myMiniRetrieve.processQueries();
-		myMiniRetrieve.printInvertedIndexKey();
+		//myMiniRetrieve.printInvertedIndexKey();
 		//myMiniRetrieve.printResults();
 	}//end main-method
 

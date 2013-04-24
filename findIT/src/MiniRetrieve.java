@@ -1,47 +1,56 @@
-
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
-//(w) 2007 Thomas Arni, InIT, ZHW
+
+
 public class MiniRetrieve {
 
-	private static String queryDirectory		= "queries";				//Verzeichnis mit allen Anfragen
-	private static String documentDirectory		= "documents";	 			//Verzeichnis mit allen Dokuementen
+	private static String queryDirectory		= "queries";
+	private static String documentDirectory		= "documents";
+	//private static String queryDirectory		= "data/destination/queries";
+	//private static String documentDirectory		= "data/destination/collection";
+
+	private static String rankingFileName			= "rankingTmp.trac_eval";
+	private static String rankingFileDestination	= "data/destination/ranking/";
+
 	private static double qNorm					= 0;
-	private static final int numberOfResults	= 10;
+	private static final int numberOfResults	= 20;
 	private static int numberOfFiles			= 0;
-	
-	private static InvertedIndex myInvertedIndex		= new InvertedIndex();
-	private static NonInvertedIndex myNonInvertedIndex	= new NonInvertedIndex();
-	private static QueryIndex myQueryIndex				= new QueryIndex();
-	
-	private static HashMap<String, Double> accuHash	= null;
+
+	public static InvertedIndex myInvertedIndex		= new InvertedIndex();
+	public static NonInvertedIndex myNonInvertedIndex	= new NonInvertedIndex();
+	public static QueryIndex myQueryIndex				= new QueryIndex();
+
+	public static HashMap<String, Double> accuHash	= null;
 	private static HashMap<String, Double> dNorm	= new HashMap<String, Double>();
-	private static HashMap<String, Double> idf		= new HashMap<String, Double>();
-	
+	public static HashMap<String, Double> idf		= new HashMap<String, Double>();
+
 	private static HashMap<String, HashMap<String, Double>> similarityThesaurus;
-	
+
 	@SuppressWarnings("unchecked")
 	private static TreeMap<Integer, HashMap<String, Double>> myResultTreeMap = new TreeMap<Integer, HashMap<String, Double>>(new KeyComparator());
-	
-	
+
+
 	public static void main(String[] args) {
 		MiniRetrieve myMiniRetrieve 			= new MiniRetrieve();
 		SimilarityThesaurusEnhanced myThesaurus	= new SimilarityThesaurusEnhanced(myInvertedIndex, myNonInvertedIndex);
-		
 		if (args.length == 0) {
 			myMiniRetrieve.handleInput(documentDirectory, queryDirectory);
 		} else if (args.length == 2) {
 			myMiniRetrieve.handleInput(args[1], args[0]);
 		}
-		myThesaurus.computeSimilarityThesaurus();
+		//similarityThesaurus	= myThesaurus.computeSimilarityThesaurus();
 		myMiniRetrieve.calculateIdfAndNorms();
 		myMiniRetrieve.processQueries();
+		QueryExpansion queryExpansion	= new QueryExpansion(similarityThesaurus);
+		queryExpansion.expandQuery();
+		System.out.println("ok");
+		System.exit(0);
 		//myMiniRetrieve.printInvertedIndexKey();
-		//myMiniRetrieve.printResults();
+		//myMiniRetrieve.writeResults();
 	}//end main-method
 
 	//handle documents
@@ -86,7 +95,6 @@ public class MiniRetrieve {
 				stemmedTokens	= runStemmer(filteredTokens);
 
 				createQueryHash(stemmedTokens, queryId);
-
 			}
 		} else {
 			System.out.println("QUERY-Verzeichniss nicht gefunden. Bitte Verzeichniss korrekt angeben!");
@@ -239,10 +247,16 @@ public class MiniRetrieve {
 					myQueryIndex.put(queryId, currentToken, 1);
 				}
 			} else {
-				myQueryIndex.put(queryId, currentToken, 1);
+				if (myInvertedIndex.containsKey(currentToken)) {
+					myQueryIndex.put(queryId, currentToken, 1);
+				} else {
+					//myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
+				}
 			}
-			if (!(myInvertedIndex.containsKey(currentToken))) {
-				myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
+			if (myInvertedIndex.containsKey(currentToken)) {
+				myQueryIndex.put(queryId, currentToken, 1);
+			} else {
+				//myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
 			}
 		}
 	}
@@ -307,7 +321,7 @@ public class MiniRetrieve {
 			}
 
 		}
-		System.out.println("Most common word for " + queryToken + ":\t" + mostCommonWord + " - " + longestRun + "\n\t" + commons.toString());
+		//System.out.println("Most common word for " + queryToken + ":\t" + mostCommonWord + " - " + longestRun + "\n\t" + commons.toString());
 		if (longestRun / queryToken.length() > .6) {	//adjust parameter for "better" results
 			return mostCommonWord;
 		}
@@ -341,12 +355,20 @@ public class MiniRetrieve {
 
 	//Printouts
 	@SuppressWarnings("rawtypes")
-	private void printResults() {
-		Iterator itaccu = myResultTreeMap.entrySet().iterator();
-		while (itaccu.hasNext()) {
-			Map.Entry m = (Map.Entry) itaccu.next();
-			HashMap accuHash = (HashMap) m.getValue();
-			//Utilities.writeTrecResultOutput(m.getKey().toString(), accuHash, numberOfResults);
+	private void writeResults() {
+		Iterator itaccu	= myResultTreeMap.entrySet().iterator();
+		try {
+			FileWriter fstream	= new FileWriter(rankingFileDestination + rankingFileName);
+			BufferedWriter out	= new BufferedWriter(fstream);
+
+			while (itaccu.hasNext()) {
+				Map.Entry m = (Map.Entry) itaccu.next();
+				HashMap accuHash = (HashMap) m.getValue();
+				Utilities.writeTrecResultOutput(m.getKey().toString(), accuHash, numberOfResults, out);
+			}
+			out.close();
+		} catch(IOException e) {
+			System.err.println("Error while writing trec_eval: " + e.toString());
 		}
 	}
 

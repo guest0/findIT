@@ -45,7 +45,7 @@ public class SimilarityThesaurusEnhanced{
 				String currentTerm1			= documentTermMap1.getKey().toString();
 				Iterator itTerms2			= documentTerms.entrySet().iterator();
 
-				termWeight1		= calcTermWeight(currentDocument, currentTerm1);
+				termWeight1		= ThesaurusUtils.calcTermWeight(currentDocument, currentTerm1, myInvertedIndex, myNonInvertedIndex);
 				termWeightSqr	= Math.pow(termWeight1, 2);
 
 				if(coeff.get(currentTerm1) == null) {
@@ -69,7 +69,7 @@ public class SimilarityThesaurusEnhanced{
 					
 					String currentTerm2					= documentTermMap2.getKey().toString();
 					HashMap<String, Double> simTerm2	= sim.get(currentTerm1);
-					termWeight2							= calcTermWeight(currentDocument, currentTerm2);
+					termWeight2							= ThesaurusUtils.calcTermWeight(currentDocument, currentTerm1, myInvertedIndex, myNonInvertedIndex);
 
 					if(simTerm2 == null || simTerm2.get(currentTerm2) == null) {
 						termWeightTot	= termWeight1 * termWeight2;
@@ -141,7 +141,7 @@ public class SimilarityThesaurusEnhanced{
 	}
 
 	//calculates the unnormalized weight of a document in a term
-	private double calcTermWeight(String document, String term) {
+	/*private double calcTermWeight(String document, String term) {
 		double termWeight, ff, maxff, iif;
 
 		ff			= getFF(document, term);
@@ -182,7 +182,7 @@ public class SimilarityThesaurusEnhanced{
 				maxff	= (int) termDocumentMap.getValue();
 			}
 		} return maxff;
-	}
+	}*/
 
 	//inserts the featureWeights into the term-document HashMap
 	private void put(String arg1, String arg2, Double featureWeight, HashMap<String, HashMap<String, Double>> hashMap) {

@@ -71,10 +71,20 @@ public class ThesaurusUtils {
 				weightedValueOfTermsOfAllDocs.put(term, Math.sqrt(value));
 			}
 		} else {
-			System.out.println("scho voll");
+			System.out.println("weightedValueOfTermsOfAllDocs scho voll");
 			System.exit(0);
 		}
 		return weightedValueOfTermsOfAllDocs;
 	}
+	
+	/*public static HashMap<String, Double> getSimilarityBetweenTwoTerms(String term1, String term2) {
+		HashMap<String, Double> similarity	= new HashMap<String, Double>();
+		for (String document : nonInvertedIndex.keySet()) {
+			double value1	= calcTermWeight(document, term1, myInvertedIndex, myNonInvertedIndex)/weightedValueOfTermsOfAllDocs.get(term1);
+			double value2	= calcTermWeight(document, term2, myInvertedIndex, myNonInvertedIndex)/weightedValueOfTermsOfAllDocs.get(term2);
+			similarity.put("unknown", value1 * value2);		//Key == ???
+		}
+		return null;
+	}*/
 
 }

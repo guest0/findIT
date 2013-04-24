@@ -13,7 +13,7 @@ public class QueryExpansion {
 
 	private QueryIndex queryMap;
 	private HashMap<String, HashMap<String, Double>> simqt	= new HashMap<String, HashMap<String, Double>>();
-	//				query			qTerm	sim
+	//				queryId			qTerm	sim
 	private HashMap<String, HashMap<String, Double>> weightQueryTerm	= new HashMap<String, HashMap<String, Double>>();
 	//				queryId			qTerm	weight
 	private HashMap<String, HashMap<String, Double>> similarityThesaurus;
@@ -21,7 +21,7 @@ public class QueryExpansion {
 	private HashMap<String, HashMap<String, Double>> badTerms	= new HashMap<String, HashMap<String,Double>>();	//vollständigkeitshalber
 	private HashMap<String, HashMap<String, Double>> additionalTerms	= new HashMap<String, HashMap<String, Double>>();
 
-	private final int NUMBER_FOR_GOOD_TERM	= 10;	//number / average (hardcore) ..(?) are possible
+	private final int NUMBER_FOR_ADDITIONAL_TERMS	= 10;	//number / average (hardcore) ..(?) are possible
 
 	public QueryExpansion(HashMap<String, HashMap<String, Double>> similarityThesaurus) {
 		queryMap				= MiniRetrieve.myQueryIndex;
@@ -44,7 +44,8 @@ public class QueryExpansion {
 			HashMap<String, Double> tmp	= new HashMap<String, Double>();
 			for (String queryTerm : queryMap.get(queryId).keySet()) {
 				for (Map.Entry<String, Double> entry : topDocuments) {
-					if (MiniRetrieve.myNonInvertedIndex.getTermFrequencyInOneDocument(entry.getKey(), queryTerm) > 0) {
+					if (MiniRetrieve.myNonInvertedIndex.get(entry.getKey()).containsValue(queryTerm) &&
+							MiniRetrieve.myNonInvertedIndex.getTermFrequencyInOneDocument(entry.getKey(), queryTerm) > 0) {
 						tmp.put(queryTerm, weightQueryTerm.get(queryId).get(queryTerm));
 					}
 				}
@@ -65,7 +66,10 @@ public class QueryExpansion {
 		for (String queryId : goodTerms.keySet()) {
 			HashMap<String, Double> tmp	= new HashMap<String, Double>();
 			for (String goodTerm : goodTerms.get(queryId).keySet()) {
-				tmp.put(queryId, calcSumQiSIM(queryId, goodTerm));		// goodTerms? (oder queryTerms?)
+				if (tmp.get(goodTerm) == null) {
+					tmp.put(goodTerm, 0d);
+				}
+				tmp.put(goodTerm, tmp.get(goodTerm) + calcSumQiSIM(queryId, goodTerm));		// goodTerms? (oder queryTerms?)
 			}
 			simqt.put(queryId, tmp);
 		}
@@ -75,9 +79,9 @@ public class QueryExpansion {
 		rankSimilarityQueryTerms();
 		for (String queryId : goodTerms.keySet()) {
 			HashMap<String, Double> tmp	= new HashMap<String, Double>();
-			for (String goodTerm : goodTerms.get(queryId).keySet()) {
-				if (simqt.get(queryId).get(goodTerm) > NUMBER_FOR_GOOD_TERM) {
-					tmp.put(goodTerm, simqt.get(queryId).get(goodTerm));
+			for (String term : simqt.get(queryId).keySet()) {
+				for (int i=NUMBER_FOR_ADDITIONAL_TERMS; i>=0; i--) {
+					tmp.put(term, simqt.get(queryId).get(term));
 				}
 			}
 			additionalTerms.put(queryId, tmp);
@@ -119,13 +123,16 @@ public class QueryExpansion {
 		}
 	}
 
-	private double calcSumQiSIM(String queryId, String queryTerm) {
-		double queryWeight	= 0;
+	private double calcSumQiSIM(String queryId, String queryTerm) {		// term-similaritäts-gewichte aufsummieren?
+		double termWeightSum	= 0;
 		double termWeight	= weightQueryTerm.get(queryId).get(queryTerm);
-		for (String term : similarityThesaurus.get(queryTerm).keySet()) {
-			queryWeight	+= similarityThesaurus.get(queryTerm).get(term) * termWeight;
+		if (similarityThesaurus.get(queryTerm) == null) {
+			return termWeight;
 		}
-		return queryWeight;
+		for (String term : similarityThesaurus.get(queryTerm).keySet()) {
+			termWeightSum	+= similarityThesaurus.get(queryTerm).get(term) * termWeight;
+		}
+		return termWeightSum;
 	}
 
 	private void rankSimilarityQueryTerms() {	// step 3
@@ -170,7 +177,7 @@ public class QueryExpansion {
 		while(itaccu.hasNext() && (counter < numberOfResults)) {
 			counter++;
 			Map.Entry m	= (Map.Entry) itaccu.next();
-			System.out.println(queryId + " Q0 " + m.getKey().toString() + " " + counter + " " + MiniRetrieve.accuHash.get(m.getKey().toString()) + " findIT");
+			//System.out.println(queryId + " Q0 " + m.getKey().toString() + " " + counter + " " + MiniRetrieve.accuHash.get(m.getKey().toString()) + " findIT");
 		}
 		return list;
 	}

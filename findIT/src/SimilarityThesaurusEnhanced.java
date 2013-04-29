@@ -68,7 +68,7 @@ public class SimilarityThesaurusEnhanced{
 					
 					String currentTerm2					= documentTermMap2.getKey().toString();
 					HashMap<String, Double> simTerm2	= sim.get(currentTerm1);
-					termWeight2							= calcTermWeight(currentDocument, currentTerm2);
+					termWeight2							= calcTermWeight(currentDocument, currentTerm1);
 
 					if(simTerm2 == null || simTerm2.get(currentTerm2) == null) {
 						termWeightTot	= termWeight1 * termWeight2;

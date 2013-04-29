@@ -3,15 +3,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 
 
 public class QueryExpansion {
 
+	private NonInvertedIndex myNonInvertedIndex;
+	private HashMap<String, Double> idf;
+	private HashMap<String, Double> accuHash;
 	private QueryIndex queryMap;
+	
 	private HashMap<String, HashMap<String, Double>> simqt	= new HashMap<String, HashMap<String, Double>>();
 	//				queryId			qTerm	sim
 	private HashMap<String, HashMap<String, Double>> weightQueryTerm	= new HashMap<String, HashMap<String, Double>>();
@@ -23,8 +25,11 @@ public class QueryExpansion {
 
 	private final int NUMBER_FOR_ADDITIONAL_TERMS	= 10;	//number / average (hardcore) ..(?) are possible
 
-	public QueryExpansion(HashMap<String, HashMap<String, Double>> similarityThesaurus) {
-		queryMap				= MiniRetrieve.myQueryIndex;
+	public QueryExpansion(HashMap<String, HashMap<String, Double>> similarityThesaurus, MiniRetrieve myMiniRetrieve) {
+		queryMap			= myMiniRetrieve.getQueryIndex();
+		myNonInvertedIndex	= myMiniRetrieve.getNonInvertedIndex();
+		idf					= myMiniRetrieve.getIdf();
+		accuHash			= myMiniRetrieve.getAccuHash();
 		this.similarityThesaurus	= similarityThesaurus;
 	}
 
@@ -44,8 +49,8 @@ public class QueryExpansion {
 			HashMap<String, Double> tmp	= new HashMap<String, Double>();
 			for (String queryTerm : queryMap.get(queryId).keySet()) {
 				for (Map.Entry<String, Double> entry : topDocuments) {
-					if (MiniRetrieve.myNonInvertedIndex.get(entry.getKey()).containsValue(queryTerm) &&
-							MiniRetrieve.myNonInvertedIndex.getTermFrequencyInOneDocument(entry.getKey(), queryTerm) > 0) {
+					if (myNonInvertedIndex.get(entry.getKey()).containsValue(queryTerm) &&
+							myNonInvertedIndex.getTermFrequencyInOneDocument(entry.getKey(), queryTerm) > 0) {
 						tmp.put(queryTerm, weightQueryTerm.get(queryId).get(queryTerm));
 					}
 				}
@@ -116,7 +121,7 @@ public class QueryExpansion {
 			HashMap<String, Double> tmp	= new HashMap<String, Double>();
 			for (String queryTerm : queryMap.get(queryId).keySet()) {
 				int queryTermFrequency = queryMap.get(queryId).get(queryTerm);
-				double value	= queryTermFrequency * MiniRetrieve.idf.get(queryTerm);
+				double value	= queryTermFrequency * idf.get(queryTerm);
 				tmp.put(queryTerm, value);
 			}
 			weightQueryTerm.put(queryId, tmp);
@@ -158,7 +163,7 @@ public class QueryExpansion {
 	//############################################################################################
 	//additionals
 	private List<Map.Entry<String, Double>> rankDocumentsByRSV(String queryId, int numberOfResults) {
-		List<Map.Entry<String, Double>> list	= new ArrayList<Map.Entry<String, Double>>(MiniRetrieve.accuHash.entrySet());
+		List<Map.Entry<String, Double>> list	= new ArrayList<Map.Entry<String, Double>>(accuHash.entrySet());
 		Collections.sort(list, new Comparator<Map.Entry<String, Double>>() {
 			public int compare(Map.Entry<String, Double> left, Map.Entry<String, Double> right) {
 				if (left.getValue() < right.getValue()) {

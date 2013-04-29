@@ -112,7 +112,6 @@ public class MiniRetrieve {
 
 			Map.Entry queryIdMap = (Map.Entry) itQueryIds.next();
 			HashMap currentQuery = (HashMap) queryIdMap.getValue();
-			int queryId = Integer.parseInt(queryIdMap.getKey().toString());
 
 			Iterator itTerms = currentQuery.entrySet().iterator(); //Iterator ueber alle Terme der Anfrage
 			while (itTerms.hasNext()) {
@@ -250,12 +249,14 @@ public class MiniRetrieve {
 				if (myInvertedIndex.containsKey(currentToken)) {
 					myQueryIndex.put(queryId, currentToken, 1);
 				} else {
+					//System.out.println(currentToken+"\t"+queryId+"\n\t"+myQueryIndex.get(queryId));
 					//myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
 				}
 			}
 			if (myInvertedIndex.containsKey(currentToken)) {
 				myQueryIndex.put(queryId, currentToken, 1);
 			} else {
+				//System.out.println(currentToken+"\t"+queryId+"\n\t"+myQueryIndex.get(queryId));
 				//myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
 			}
 		}

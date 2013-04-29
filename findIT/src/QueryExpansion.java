@@ -138,7 +138,7 @@ public class QueryExpansion {
 	private void rankSimilarityQueryTerms() {	// step 3
 		for (String queryId : simqt.keySet()) {
 			HashMap<String, Double> sortedSimqt = new HashMap<String, Double>();
-			sortedSimqt = sortHashMap(simqt.get(queryId));
+			sortedSimqt = ThesaurusUtils.sortHashMap(simqt.get(queryId));
 			simqt.put(queryId, sortedSimqt);
 		}
 	}
@@ -180,24 +180,6 @@ public class QueryExpansion {
 			//System.out.println(queryId + " Q0 " + m.getKey().toString() + " " + counter + " " + MiniRetrieve.accuHash.get(m.getKey().toString()) + " findIT");
 		}
 		return list;
-	}
-
-	private HashMap<String, Double> sortHashMap(HashMap<String, Double> input) {
-		Map<String, Double> tempMap = new HashMap<String, Double>();
-		for (String wsState : input.keySet()){
-			tempMap.put(wsState,input.get(wsState));
-		}
-		List<String> mapKeys = new ArrayList<String>(tempMap.keySet());
-		List<Double> mapValues = new ArrayList<Double>(tempMap.values());
-		HashMap<String, Double> sortedMap = new LinkedHashMap();
-		TreeSet<Double> sortedSet = new TreeSet<Double>(mapValues);
-		Object[] sortedArray = sortedSet.toArray();
-		int size = sortedArray.length;
-		for (int i=0; i<size; i++){
-			sortedMap.put(mapKeys.get(mapValues.indexOf(sortedArray[i])), 
-					(Double)sortedArray[i]);
-		}
-		return sortedMap;
 	}
 
 }

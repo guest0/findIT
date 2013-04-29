@@ -1,3 +1,4 @@
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -20,16 +21,15 @@ public class MiniRetrieve {
 	private static final int numberOfResults	= 20;
 	private static int numberOfFiles			= 0;
 
-	public static InvertedIndex myInvertedIndex		= new InvertedIndex();
-	public static NonInvertedIndex myNonInvertedIndex	= new NonInvertedIndex();
-	public static QueryIndex myQueryIndex				= new QueryIndex();
+	private static InvertedIndex myInvertedIndex		= new InvertedIndex();
+	private static NonInvertedIndex myNonInvertedIndex	= new NonInvertedIndex();
+	private static QueryIndex myQueryIndex				= new QueryIndex();
 
-	public static HashMap<String, Double> accuHash	= null;
+	private static HashMap<String, Double> accuHash	= null;
 	private static HashMap<String, Double> dNorm	= new HashMap<String, Double>();
-	public static HashMap<String, Double> idf		= new HashMap<String, Double>();
+	private static HashMap<String, Double> idf		= new HashMap<String, Double>();
 
 	private static HashMap<String, HashMap<String, Double>> similarityThesaurus;
-	private static HashMap<String, HashMap<String, Double>> expandedQuery;
 
 	@SuppressWarnings("unchecked")
 	private static TreeMap<Integer, HashMap<String, Double>> myResultTreeMap = new TreeMap<Integer, HashMap<String, Double>>(new KeyComparator());
@@ -38,6 +38,7 @@ public class MiniRetrieve {
 	public static void main(String[] args) {
 		MiniRetrieve myMiniRetrieve 			= new MiniRetrieve();
 		SimilarityThesaurusEnhanced myThesaurus	= new SimilarityThesaurusEnhanced(myInvertedIndex, myNonInvertedIndex);
+
 		if (args.length == 0) {
 			myMiniRetrieve.handleInput(documentDirectory, queryDirectory);
 		} else if (args.length == 2) {
@@ -46,10 +47,7 @@ public class MiniRetrieve {
 		similarityThesaurus	= myThesaurus.computeSimilarityThesaurus();
 		myMiniRetrieve.calculateIdfAndNorms();
 		myMiniRetrieve.processQueries();
-		QueryExpansion queryExpansion	= new QueryExpansion(similarityThesaurus);
-		expandedQuery					= queryExpansion.expandQuery();
-		myMiniRetrieve.calcNewRSV();
-		//myMiniRetrieve.printInvertedIndexKey();
+		myMiniRetrieve.printInvertedIndexKey();
 		myMiniRetrieve.writeResults();
 	}//end main-method
 
@@ -95,6 +93,7 @@ public class MiniRetrieve {
 				stemmedTokens	= runStemmer(filteredTokens);
 
 				createQueryHash(stemmedTokens, queryId);
+
 			}
 		} else {
 			System.out.println("QUERY-Verzeichniss nicht gefunden. Bitte Verzeichniss korrekt angeben!");
@@ -112,13 +111,14 @@ public class MiniRetrieve {
 
 			Map.Entry queryIdMap = (Map.Entry) itQueryIds.next();
 			HashMap currentQuery = (HashMap) queryIdMap.getValue();
+			int queryId = Integer.parseInt(queryIdMap.getKey().toString());
 
 			Iterator itTerms = currentQuery.entrySet().iterator(); //Iterator ueber alle Terme der Anfrage
 			while (itTerms.hasNext()) {
 				Map.Entry queryTermMap = (Map.Entry) itTerms.next();
 				String currentQueryTerm = queryTermMap.getKey().toString(); //liefert akutellen Anfrageterm
 				if (!idf.containsKey(currentQueryTerm)) {
-					idf.put(currentQueryTerm, Math.log(1 + numberOfFiles));		// = 7.244941546337007 (for test-docs)
+					idf.put(currentQueryTerm, Math.log(1 + numberOfFiles));
 				}
 				Integer queryTermFrequency = (Integer) currentQuery.get(currentQueryTerm);
 				double b = queryTermFrequency * idf.get(currentQueryTerm); //qtf * idf
@@ -145,7 +145,7 @@ public class MiniRetrieve {
 			qNorm = Math.sqrt(qNorm);
 			this.normalizeVectors(myNonInvertedIndex); //Norm berechnen 
 			//Fuege Anfragenummer "queryId" und Accumulator "accuHash" dem ResultTreeMap hinzu
-			//myResultTreeMap.put(queryId, accuHash);
+			myResultTreeMap.put(queryId, accuHash);
 		}
 	}
 
@@ -246,45 +246,11 @@ public class MiniRetrieve {
 					myQueryIndex.put(queryId, currentToken, 1);
 				}
 			} else {
-				if (myInvertedIndex.containsKey(currentToken)) {
-					myQueryIndex.put(queryId, currentToken, 1);
-				} else {
-					//System.out.println(currentToken+"\t"+queryId+"\n\t"+myQueryIndex.get(queryId));
-					//myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
-				}
-			}
-			if (myInvertedIndex.containsKey(currentToken)) {
 				myQueryIndex.put(queryId, currentToken, 1);
-			} else {
-				//System.out.println(currentToken+"\t"+queryId+"\n\t"+myQueryIndex.get(queryId));
-				//myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
 			}
-		}
-	}
-
-	private void calcNewRSV() {
-		for (String queryId : expandedQuery.keySet()) {
-			accuHash = new HashMap<String, Double>(10000);
-			qNorm = 0;
-			for (String queryTerm : expandedQuery.get(queryId).keySet()) {
-				double b	= expandedQuery.get(queryId).get(queryTerm);
-				qNorm += Math.pow(b, 2);
-				if (myInvertedIndex.containsKey(queryTerm)) {
-					for (String document : myInvertedIndex.get(queryTerm).keySet()) {
-						double a = myInvertedIndex.getTermFrequencyInOneDocument(document, queryTerm) * idf.get(queryTerm);
-						if (accuHash.containsKey(document)) {
-							double accuValue = accuHash.get(document);
-							accuValue += a * b;
-							accuHash.put(document, accuValue);
-						} else {
-							accuHash.put(document, a * b);
-						}
-					}
-				}
-			}//end while		
-			qNorm = Math.sqrt(qNorm);
-			this.normalizeVectors(myNonInvertedIndex);
-			myResultTreeMap.put(Integer.parseInt(queryId), accuHash);
+			if (!(myInvertedIndex.containsKey(currentToken))) {
+				myQueryIndex.put(queryId, handleUnknownQueryWord(currentToken), 1);
+			}
 		}
 	}
 
@@ -348,7 +314,7 @@ public class MiniRetrieve {
 			}
 
 		}
-		//System.out.println("Most common word for " + queryToken + ":\t" + mostCommonWord + " - " + longestRun + "\n\t" + commons.toString());
+		System.out.println("Most common word for " + queryToken + ":\t" + mostCommonWord + " - " + longestRun + "\n\t" + commons.toString());
 		if (longestRun / queryToken.length() > .6) {	//adjust parameter for "better" results
 			return mostCommonWord;
 		}

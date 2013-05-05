@@ -9,10 +9,10 @@ import java.util.regex.Pattern;
 
 public class MiniRetrieve {
 
-	//private static String queryDirectory		= "queries";
-	//private static String documentDirectory		= "documents";
-	private static String queryDirectory		= "data/destination/queries";
-	private static String documentDirectory		= "data/destination/collection";
+	private static String queryDirectory		= "queries";
+	private static String documentDirectory		= "documents";
+	//private static String queryDirectory		= "data/destination/queries";
+	//private static String documentDirectory		= "data/destination/collection";
 
 	private static String rankingFileName			= "rankingTmp.trac_eval";
 	private static String rankingFileDestination	= "data/destination/ranking/";
@@ -297,15 +297,16 @@ public class MiniRetrieve {
 		char tmpChar[];
 
 		for (int i = 0; i < filteredTokens.length; i++) {
-			tmpToken = filteredTokens[i];
-			tmpChar = new char[tmpToken.length()];
+			
+			tmpToken	= filteredTokens[i];
+			tmpChar	= new char[tmpToken.length()];
 			for (int j = 0; j < tmpToken.length(); j++) {
 				tmpChar[j] = tmpToken.charAt(j);
 				if (!Character.isLetter(tmpChar[j])) {
-					tmpTokens[index++] = tmpToken;
-					includesNumbers = true;
+					includesNumbers		= true;
+					tmpTokens[index++]	= tmpToken;
 					break;
-				}
+				}					
 			}
 			if (!includesNumbers && tmpToken.length() > 0) {
 				stemmer.add(tmpChar, tmpChar.length);
@@ -374,13 +375,27 @@ public class MiniRetrieve {
 	}*/
 
 	//Printouts
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void writeResults() {
 		Iterator itaccu	= myResultTreeMap.entrySet().iterator();
+		
 		try {
 			FileWriter fstream	= new FileWriter(rankingFileDestination + rankingFileName);
 			BufferedWriter out	= new BufferedWriter(fstream);
+			
+			FileWriter stemmTest	= new FileWriter(rankingFileDestination + "stemmerTest");
+			BufferedWriter stemmOut	= new BufferedWriter(stemmTest);
 
+			List sortedKeys = new ArrayList(myInvertedIndex.keySet());
+			Collections.sort(sortedKeys);
+			Iterator itlist	= sortedKeys.iterator();
+			
+			while (itlist.hasNext()) {
+				String token = itlist.next().toString();
+				stemmOut.write(token + "\r\n");
+			}
+			stemmOut.close();
+			
 			while (itaccu.hasNext()) {
 				Map.Entry m = (Map.Entry) itaccu.next();
 				HashMap accuHash = (HashMap) m.getValue();

@@ -9,10 +9,10 @@ import java.util.regex.Pattern;
 
 public class MiniRetrieve {
 
-	private static String queryDirectory		= "queries";
-	private static String documentDirectory		= "documents";
-	//private static String queryDirectory		= "data/destination/queries";
-	//private static String documentDirectory		= "data/destination/collection";
+	//private static String queryDirectory		= "queries";
+	//private static String documentDirectory		= "documents";
+	private static String queryDirectory		= "data/destination/queries";
+	private static String documentDirectory		= "data/destination/collection";
 
 	private static String rankingFileName			= "rankingTmp.trac_eval";
 	private static String rankingFileDestination	= "data/destination/ranking/";
@@ -70,11 +70,12 @@ public class MiniRetrieve {
 				String[] originalTokens = p.split(fileContent);
 				String[] filteredTokens;
 				String[] stemmedTokens;
-
+				
 				filteredTokens	= runStopwordfilter(originalTokens);
 				stemmedTokens	= runStemmer(filteredTokens);
 
 				createIndexes(stemmedTokens, filename);
+				
 			}
 		} else {
 			System.out.println("DOCUMENT-Verzeichnis nicht gefunden. Bitte Verzeichnis korrekt angeben!");
@@ -289,35 +290,104 @@ public class MiniRetrieve {
 	//initializes the Stemmer
 	private String[] runStemmer(String[] filteredTokens) {
 		Stemmer stemmer = new Stemmer();
-		String[] tmpTokens = new String[filteredTokens.length];
-		int index = 0;
-		boolean includesNumbers = false;
+		String[] tmpTokens = new String[100000];
+		int tokenIndex = 0;
 		String[] stemmedTokens;
 		String tmpToken;
-		char tmpChar[];
+		char tmpChar;
+		char[] tmpLetters;
+		char[] tmpNumbers;
+		char[] tmpMixed;
+		int numberIndex, letterIndex, mixedIndex;
+		boolean prevWasLetter, stemMixed;
 
 		for (int i = 0; i < filteredTokens.length; i++) {
-			
 			tmpToken	= filteredTokens[i];
-			tmpChar	= new char[tmpToken.length()];
+			tmpLetters	= new char[tmpToken.length()];
+			tmpNumbers	= new char[tmpToken.length()];
+			tmpMixed	= new char[tmpToken.length()];
+			numberIndex		= 0;
+			letterIndex		= 0;
+			mixedIndex		= 0;
+			prevWasLetter	= true;
+			stemMixed		= false;
+			
 			for (int j = 0; j < tmpToken.length(); j++) {
-				tmpChar[j] = tmpToken.charAt(j);
-				if (!Character.isLetter(tmpChar[j])) {
-					includesNumbers		= true;
-					tmpTokens[index++]	= tmpToken;
-					break;
-				}					
+				tmpChar		= tmpToken.charAt(j);
+				tmpMixed[mixedIndex++]	= tmpChar;
+				
+				if(Character.isLetter(tmpChar)) {
+					if(!prevWasLetter) {
+						if(numberIndex > 3) {
+							stemMixed	= false;
+							tmpMixed	= new char[tmpToken.length()];
+							mixedIndex	= 0;
+							
+							stemmer.add(tmpNumbers, tmpNumbers.length);
+							stemmer.stem();
+							tmpTokens[tokenIndex++]	= stemmer.toString();
+						} else {
+							stemMixed	= true;
+						}
+						tmpNumbers	= new char[tmpToken.length()];
+						numberIndex	= 0;
+					}
+					tmpLetters[letterIndex++]	= tmpChar;
+					prevWasLetter	= true;
+				} else {
+					if(prevWasLetter) {
+						if(letterIndex > 3) {
+							stemMixed	= false;
+							tmpMixed	= new char[tmpToken.length()];
+							mixedIndex	= 0;
+
+							stemmer.add(tmpLetters, tmpLetters.length);
+							stemmer.stem();
+							tmpTokens[tokenIndex++]	= stemmer.toString();
+						} else {
+							stemMixed	= true;
+						}
+						tmpLetters	= new char[tmpToken.length()];
+						letterIndex	= 0;
+					}
+					tmpNumbers[numberIndex++]	= tmpChar;
+					prevWasLetter	= false;
+				}
+				
 			}
-			if (!includesNumbers && tmpToken.length() > 0) {
-				stemmer.add(tmpChar, tmpChar.length);
-				stemmer.stem();
-				tmpTokens[index++] = stemmer.toString();
-				includesNumbers = false;
+			if(stemMixed) {
+				if(mixedIndex > 2 && numberIndex < 4 && letterIndex < 4) {
+					stemmer.add(tmpMixed, tmpMixed.length);
+					stemmer.stem();
+					tmpTokens[tokenIndex++]	= stemmer.toString();
+				}
+				if(numberIndex > 3) {
+					stemmer.add(tmpNumbers, tmpNumbers.length);
+					stemmer.stem();
+					tmpTokens[tokenIndex++]	= stemmer.toString();
+				}
+				if(letterIndex > 3) {
+					stemmer.add(tmpLetters, tmpLetters.length);
+					stemmer.stem();
+					tmpTokens[tokenIndex++]	= stemmer.toString();
+				}
+			}
+			if(!stemMixed) {
+				if(numberIndex > 1) {
+					stemmer.add(tmpNumbers, tmpNumbers.length);
+					stemmer.stem();
+					tmpTokens[tokenIndex++]	= stemmer.toString();
+				}
+				if(letterIndex > 1) {
+					stemmer.add(tmpLetters, tmpLetters.length);
+					stemmer.stem();
+					tmpTokens[tokenIndex++]	= stemmer.toString();
+				}
 			}
 		}
 
-		stemmedTokens = new String[index];
-		for (int k = 0; k < index; k++) {
+		stemmedTokens = new String[tokenIndex];
+		for (int k = 0; k < tokenIndex; k++) {
 			stemmedTokens[k] = tmpTokens[k];
 		}
 

@@ -1,3 +1,5 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.HashMap;
 
 
@@ -18,8 +20,8 @@ public class QueryExpansion {
 	private HashMap<String, HashMap<String, Double>> additionalTerms	= new HashMap<String, HashMap<String, Double>>();
 
 	// variables to adjust result
-	private final int NUMBER_TOP_RATED_DOCUMENTS	= 1;	//
-	private final int NUMBER_FOR_ADDITIONAL_TERMS	= 1;	//number / average (hardcore) ..(?) are possible
+	private final int NUMBER_TOP_RATED_DOCUMENTS	= 10;	//
+	private final int NUMBER_FOR_ADDITIONAL_TERMS	= 4;	//number / average (hardcore) ..(?) are possible
 
 	public QueryExpansion(HashMap<String, HashMap<String, Double>> similarityThesaurus, MiniRetrieve myMiniRetrieve) {
 		queryMap			= myMiniRetrieve.getQueryIndex();
@@ -36,6 +38,17 @@ public class QueryExpansion {
 		setAdditionalTerms();
 		setWeightForAdditionalQueryTerms();
 		addNewTermsToQuery();
+		try {
+			FileWriter fw	= new FileWriter("weight.txt");
+			BufferedWriter bw	= new BufferedWriter(fw);
+			for (String queryId : weightQueryTerm.keySet()) {
+				bw.write(queryId + "\r\n" + queryMap.get(queryId)+"\r\n");
+				bw.write(additionalTerms.get(queryId)+"\r\n");
+				bw.write(weightQueryTerm.get(queryId)+"\r\n\r\n");
+			}
+			bw.close();
+		}
+		catch (Exception e) {}
 		return weightQueryTerm;		//weightQueryTerm here = expanded query with weighted terms
 	}
 
@@ -70,7 +83,7 @@ public class QueryExpansion {
 					tmp.put(goodTerm, 0d);
 				}
 				tmp.put(goodTerm, tmp.get(goodTerm) + calcSumQiSIM(queryId, goodTerm));		// put in the "similar" terms??*/
-				simqt.put(queryId, getWeightedSimWithGoodTerms(queryId, goodTerm));
+				simqt.put(queryId, getWeightedSimWithGoodTerms(queryId));
 			}
 			//simqt.put(queryId, tmp);
 		}
@@ -103,7 +116,8 @@ public class QueryExpansion {
 			}
 			for (String newQueryTerm : additionalTerms.get(queryId).keySet()) {
 				double nominator	= simqt.get(queryId).get(newQueryTerm);
-				additionalTerms.get(queryId).put(newQueryTerm, nominator/denominator);
+				double value		= nominator/denominator;
+				additionalTerms.get(queryId).put(newQueryTerm, value);
 			}
 		}
 	}
@@ -129,11 +143,19 @@ public class QueryExpansion {
 			weightQueryTerm.put(queryId, tmp);
 		}
 	}
-	
-	private HashMap<String, Double> getWeightedSimWithGoodTerms(String queryId, String goodTerm) {
+
+	private HashMap<String, Double> getWeightedSimWithGoodTerms(String queryId) {
 		HashMap<String, Double> tmp	= new HashMap<>();
-		for (String term : similarityThesaurus.get(goodTerm).keySet()) {
-			tmp.put(term, weightQueryTerm.get(queryId).get(goodTerm) * similarityThesaurus.get(goodTerm).get(term));
+		double sum	= 0;
+		for (String term : similarityThesaurus.keySet()) {
+			for (String goodTerm : goodTerms.get(queryId).keySet()) {
+				if (!term.equals(goodTerm)) {
+					if (similarityThesaurus.get(goodTerm) != null && similarityThesaurus.get(goodTerm).get(term) != null) {
+						sum	+= weightQueryTerm.get(queryId).get(goodTerm) * similarityThesaurus.get(goodTerm).get(term);
+					}
+				}
+			}
+			tmp.put(term, sum);
 		}
 		return tmp;
 	}

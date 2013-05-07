@@ -146,8 +146,8 @@ public class QueryExpansion {
 
 	private HashMap<String, Double> getWeightedSimWithGoodTerms(String queryId) {
 		HashMap<String, Double> tmp	= new HashMap<>();
-		double sum	= 0;
 		for (String term : similarityThesaurus.keySet()) {
+			double sum	= 0;
 			for (String goodTerm : goodTerms.get(queryId).keySet()) {
 				if (!term.equals(goodTerm)) {
 					if (similarityThesaurus.get(goodTerm) != null && similarityThesaurus.get(goodTerm).get(term) != null) {

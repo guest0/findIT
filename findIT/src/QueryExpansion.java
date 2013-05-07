@@ -16,7 +16,7 @@ public class QueryExpansion {
 	//				queryId			qTerm	weight
 	private HashMap<String, HashMap<String, Double>> similarityThesaurus;
 	private HashMap<String, HashMap<String, Double>> goodTerms	= new HashMap<String, HashMap<String,Double>>();
-	private HashMap<String, HashMap<String, Double>> badTerms	= new HashMap<String, HashMap<String,Double>>();	//vollständigkeitshalber
+	private HashMap<String, HashMap<String, Double>> badTerms	= new HashMap<String, HashMap<String,Double>>();	//vollstï¿½ndigkeitshalber
 	private HashMap<String, HashMap<String, Double>> additionalTerms	= new HashMap<String, HashMap<String, Double>>();
 
 	// variables to adjust result
@@ -77,15 +77,7 @@ public class QueryExpansion {
 
 	private void calcSimQueryTerm() {	// step 2
 		for (String queryId : goodTerms.keySet()) {
-			//HashMap<String, Double> tmp	= new HashMap<String, Double>();
-			for (String goodTerm : goodTerms.get(queryId).keySet()) {
-				/*if (tmp.get(goodTerm) == null) {
-					tmp.put(goodTerm, 0d);
-				}
-				tmp.put(goodTerm, tmp.get(goodTerm) + calcSumQiSIM(queryId, goodTerm));		// put in the "similar" terms??*/
-				simqt.put(queryId, getWeightedSimWithGoodTerms(queryId));
-			}
-			//simqt.put(queryId, tmp);
+			simqt.put(queryId, getWeightedSimWithGoodTerms(queryId));
 		}
 	}
 
@@ -160,7 +152,7 @@ public class QueryExpansion {
 		return tmp;
 	}
 
-	/*private double calcSumQiSIM(String queryId, String goodTerm) {		// term-similaritäts-gewichte aufsummieren?
+	/*private double calcSumQiSIM(String queryId, String goodTerm) {		// term-similaritï¿½ts-gewichte aufsummieren?
 		double termWeightSum	= 0;
 		double goodTermWeight	= weightQueryTerm.get(queryId).get(goodTerm);
 		/*if (similarityThesaurus.get(goodTerm) == null) {	// jeder gute term wurde in einem dokument gefunden -> aus dokumenten wurd sim berechnet
